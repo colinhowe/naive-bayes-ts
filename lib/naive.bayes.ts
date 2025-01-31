@@ -75,7 +75,10 @@ export class NaiveBayes {
 
   private defaultTokenizer(text: string): string[] {
     // Remove punctuation from text - remove anything that isn't a word char or a space
-    return text.replace(/[^(a-zA-ZA-Яa-я0-9_)+\s]/g, ' ').split(/\s+/);
+    return text
+      .replace(/[^(a-zA-ZA-Яa-я0-9_)+\s]/g, ' ')
+      .toLocaleLowerCase()
+      .split(/\s+/);
   }
 
   /**
@@ -164,7 +167,6 @@ export class NaiveBayes {
         const frequencyInText = frequencyTable[token];
         const tokenProbability = this.tokenProbability(token, category);
 
-        // console.log('token: %s category: `%s` tokenProbability: %d', token, category, tokenProbability)
         // Determine the log of the P( w | c ) for this word
         logProbability += frequencyInText * Math.log(tokenProbability);
       });
