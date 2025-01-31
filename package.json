@@ -1,8 +1,8 @@
 {
-  "name": "@thomaschampagne/naive-bayes",
+  "name": "@colinhowe/naive-bayes-ts",
   "description": "TypeScript Naive Bayes Classifier for Node and Browser",
   "version": "1.0.0",
-  "author": "Thomas Champagne",
+  "author": "Colin Howe",
   "keywords": [
     "naive",
     "bayes",
@@ -41,6 +41,6 @@
   "types": "./dist/naive.bayes.d.ts",
   "repository": {
     "type": "git",
-    "url": "http://github.com/thomaschampagne/naive-bayes.git"
+    "url": "http://github.com/colinhowe/naive-bayes-ts.git"
   }
 }
