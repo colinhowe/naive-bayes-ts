@@ -1,6 +1,9 @@
 # TypeScript Naive Bayes Classifier for Node and Browser
 
-This "Naive Bayes Classifier" library is based on the [bayes](https://www.npmjs.com/package/bayes) package. Library has been re-implemented as synchronous, refactored and cleaned under TypeScript, Jest, ESLint and Prettier.
+This "Naive Bayes Classifier" library is based on the [naive-bayes](https://github.com/thomaschampagne/naive-bayes) package, which is in turn based on [bayes](https://www.npmjs.com/package/bayes) package. Library has been re-implemented as synchronous, refactored and cleaned under TypeScript, Jest, ESLint and Prettier.
+
+This version has been modified to surface some of the internal details - such as the probability for
+the chosen category.
 
 ## What can I use this for?
 
@@ -13,7 +16,7 @@ You can use this for categorizing any text content into any arbitrary set of **c
 ## Installing
 
 ```bash
-npm install naive-bayes
+npm install naive-bayes-ts
 ```
 
 ## Usage
@@ -31,7 +34,7 @@ classifier.learn('Sweet, this is incredibly, amazing, perfect, great!!', 'positi
 classifier.learn('terrible, shitty thing. Damn. Sucks!!', 'negative');
 
 // Now ask it to categorize a document it has never seen before
-console.log(classifier.categorize('awesome, cool, amazing!! Yay.')); // => 'positive'
+console.log(classifier.categorize('awesome, cool, amazing!! Yay.')); // => ['positive', 0.8...]
 
 // Serialize the classifier's state as a JSON string.
 const model = classifier.toJson();
@@ -39,7 +42,7 @@ const model = classifier.toJson();
 // Load the classifier back from its JSON representation.
 const revivedClassifier = NaiveBayes.fromJson(model);
 
-console.log(revivedClassifier.categorize('Damn')); // => 'negative'
+console.log(revivedClassifier.categorize('Damn')); // => ['negative', 0....]
 
 ```
 
@@ -65,7 +68,7 @@ Teach your classifier what `category` the `text` belongs to. The more you teach 
 
 ### `classifier.categorize(text)`
 
-Returns the `category` it thinks `text` belongs to. Its judgement is based on what you have taught it with **.learn()**.
+Returns the `category` it thinks `text` belongs to along with the `probability`. Its judgement is based on what you have taught it with **.learn()**.
 
 ### `classifier.toJson()`
 

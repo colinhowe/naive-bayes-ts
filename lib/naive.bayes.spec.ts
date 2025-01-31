@@ -1,12 +1,11 @@
 import { NaiveBayes } from './naive.bayes';
 
 describe('Test NaiveBayes', () => {
-
   describe('bayes() init', () => {
     it('valid options (falsey or with an object) do not raise Errors', () => {
       const validOptionsCases = [undefined, {}];
 
-      validOptionsCases.forEach(function(validOptions) {
+      validOptionsCases.forEach(function (validOptions) {
         const classifier = new NaiveBayes(validOptions);
         expect(classifier.options).toEqual({});
       });
@@ -51,13 +50,12 @@ describe('Test NaiveBayes', () => {
       expect(classifier).toEqual(revivedClassifier);
     });
 
-    it('allows de-serializing an empty state', function(done) {
+    it('allows de-serializing an empty state', function (done) {
       const classifier = new NaiveBayes();
       const jsonRepr = classifier.toJson();
       NaiveBayes.fromJson(jsonRepr);
       done();
     });
-
   });
 
   describe('Learn correctness', () => {
@@ -76,7 +74,9 @@ describe('Test NaiveBayes', () => {
       classifier.learn('I dont really know what to make of this.', 'neutral');
 
       // Now specs it to see that it correctly categorizes a new document
-      expect(classifier.categorize('awesome, cool, amazing!! Yay.')).toEqual('positive');
+      const [category, probability] = classifier.categorize('awesome, cool, amazing!! Yay.');
+      expect(category).toEqual('positive');
+      expect(probability).toBeGreaterThan(0.8);
     });
 
     // Topic analysis specs
@@ -107,7 +107,9 @@ describe('Test NaiveBayes', () => {
       expect(japaneseFrequencyCount['Chinese']).toEqual(1);
 
       // Now specs it to see that it correctly categorizes a new document
-      expect(classifier.categorize('Chinese Chinese Chinese Tokyo Japan')).toEqual('chinese');
+      const [category, probability] = classifier.categorize('Chinese Chinese Chinese Tokyo Japan');
+      expect(category).toEqual('chinese');
+      expect(probability).toBeGreaterThan(0.68);
     });
 
     it('Correctly tokenizes Cyrillic characters', async () => {
@@ -130,5 +132,4 @@ describe('Test NaiveBayes', () => {
       expect(bFreqCount['Тест']).toEqual(2);
     });
   });
-
 });

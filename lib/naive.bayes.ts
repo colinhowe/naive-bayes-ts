@@ -1,5 +1,4 @@
 export class NaiveBayes {
-
   /**
    * Initializes a NaiveBayes instance from a JSON state representation.
    * Use this with classifier.toJson().
@@ -17,15 +16,12 @@ export class NaiveBayes {
           throw new Error('NaiveBayes.fromJson: JSON string is missing an expected property: `' + key + '`.');
         }
         (classifier as any)[key] = parsed[key];
-
       });
       return classifier;
-
     } catch (e) {
       throw new Error('NaiveBayes.fromJson expects a valid JSON string.');
     }
   }
-
 
   public tokenizer: (text: string) => string[];
   public vocabulary: { [key: string]: boolean };
@@ -36,7 +32,6 @@ export class NaiveBayes {
   public wordFrequencyCount: { [key: string]: { [key: string]: number } };
   public categories: { [key: string]: boolean };
 
-
   /**
    * Naive-Bayes Classifier
    *
@@ -46,8 +41,7 @@ export class NaiveBayes {
    *   - `tokenizer`  => custom tokenization function
    *
    */
-  constructor(public options: { tokenizer?: (text: string) => string[]; } = {}) {
-
+  constructor(public options: { tokenizer?: (text: string) => string[] } = {}) {
     // set options object
     if (this.options) {
       if (!this.options || typeof this.options !== 'object' || Array.isArray(this.options)) {
@@ -106,7 +100,6 @@ export class NaiveBayes {
    * @param category
    */
   public learn(text: string, category: string): void {
-
     // Initialize category data structures if we've never seen this category
     this.initializeCategory(category);
 
@@ -124,7 +117,6 @@ export class NaiveBayes {
 
     // Update our vocabulary and our word frequency count for this category
     Object.keys(frequencyTable).forEach((token: string) => {
-
       // Add this word to our vocabulary if not already existing
       if (!this.vocabulary[token]) {
         this.vocabulary[token] = true;
@@ -134,29 +126,28 @@ export class NaiveBayes {
       const frequencyInText = frequencyTable[token];
 
       // Update the frequency information for this word in this category
-      if (!this.wordFrequencyCount[category][token])
-        this.wordFrequencyCount[category][token] = frequencyInText;
-      else
-        this.wordFrequencyCount[category][token] += frequencyInText;
+      if (!this.wordFrequencyCount[category][token]) this.wordFrequencyCount[category][token] = frequencyInText;
+      else this.wordFrequencyCount[category][token] += frequencyInText;
 
       // Update the count of all words we have seen mapped to this category
       this.wordCount[category] += frequencyInText;
     });
   }
 
-
   /**
    * Determine what category `text` belongs to.
    *
    * @param  {String} text
-   * @return {Promise<string>} category
+   * @return {[string, number]} [category, probability]
    */
-  public categorize(text: string): string | null {
-    let maxProbability = -Infinity;
-    let chosenCategory: string | null = null;
-
+  public categorize(text: string): [string | null, number] {
     const tokens: string[] = this.tokenizer(text);
     const frequencyTable = this.frequencyTable(tokens);
+    const logProbs: Record<string, number> = {};
+
+    if (Object.keys(this.categories).length === 0) {
+      return [null, 1];
+    }
 
     // Iterate thru our categories to find the one with max probability for this text
     Object.keys(this.categories).forEach(category => {
@@ -169,24 +160,31 @@ export class NaiveBayes {
       let logProbability = Math.log(categoryProbability);
 
       // Now determine P( w | c ) for each word `w` in the text
-      Object
-        .keys(frequencyTable)
-        .forEach(token => {
-          const frequencyInText = frequencyTable[token];
-          const tokenProbability = this.tokenProbability(token, category);
+      Object.keys(frequencyTable).forEach(token => {
+        const frequencyInText = frequencyTable[token];
+        const tokenProbability = this.tokenProbability(token, category);
 
-          // console.log('token: %s category: `%s` tokenProbability: %d', token, category, tokenProbability)
-          // Determine the log of the P( w | c ) for this word
-          logProbability += frequencyInText * Math.log(tokenProbability);
-        });
+        // console.log('token: %s category: `%s` tokenProbability: %d', token, category, tokenProbability)
+        // Determine the log of the P( w | c ) for this word
+        logProbability += frequencyInText * Math.log(tokenProbability);
+      });
 
-      if (logProbability > maxProbability) {
-        maxProbability = logProbability;
-        chosenCategory = category;
-      }
+      logProbs[category] = logProbability;
     });
 
-    return chosenCategory;
+    // Convert log probabilities to actual probabilities using softmax
+    const maxLogProb = Math.max(...Object.values(logProbs)); // Prevent overflow
+    const expProbs = Object.fromEntries(
+      Object.entries(logProbs).map(([cls, logP]) => [cls, Math.exp(logP - maxLogProb)]) // Shift for numerical stability
+    );
+    const sumExpProbs = Object.values(expProbs).reduce((a, b) => a + b, 0);
+    const probabilities = Object.fromEntries(Object.entries(expProbs).map(([cls, expP]) => [cls, expP / sumExpProbs]));
+
+    const chosenCategory = Object.keys(probabilities).reduce((catA, catB) =>
+      probabilities[catA] > probabilities[catB] ? catA : catB
+    );
+
+    return [chosenCategory, probabilities[chosenCategory]];
   }
 
   /**
@@ -236,5 +234,4 @@ export class NaiveBayes {
   public toJson(): string {
     return JSON.stringify(this);
   }
-
 }
